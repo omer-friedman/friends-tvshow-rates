@@ -1,35 +1,42 @@
-//The url we want: http://api.tvmaze.com/singlesearch/shows?q=friends
-const options = {
-    host: 'api.tvmaze.com',
-    path: '/singlesearch/shows?q=friends',
-    method: 'GET',
-}
+const http = require('http');
+const Promise = require('promise');
+
 
 /**
- * getDataFromAPI:
+ * getDataFromTVMaze:
  * Make a GET request to fetch tv shows from api.tvmaze
- * @param response - callback resoponse from http
+ * @return {string[][]} - The data as a 2d array - each array represents a tv show properties
  */
-const getDataFromAPI = (response) =>{
-    let data = '';
-    response.on('data', function(chunk){
-        data += chunk;
-    }).on('error', function(err){
-        console.log(err);
-    }).on('end', function(){
-        createGoogleSheet(data);
+const getDataFromTVMaze = async(options) =>{
+    return new Promise((resolve, reject) =>{
+        http.request(options, response =>{
+            let data = '';
+            response.on('data', function(chunk){
+                data += chunk;
+            }).on('error', function(err){
+                reject(err);
+            }).on('end', function(){
+                data = prepareData(data)
+                resolve(data);
+            });
+        }).end();
     });
 }
 
-//Make http request
-http.request(options, getDataFromAPI).end();
-
 /**
- * createGoogleSheet:
- * Get data as JSON and insert it to a new Google Sheets using
- * Google-Sheets API v4
- * @param data - a JSON object to create a google sheet from.
+ * Prepare data to be ready to insert into the google sheets
+ * @param {string} data - JSON alike string recieved from the api call
+ * @return {string[][]} - 2d array containing the specific columns from all tv shows
  */
-createGoogleSheet = (data) =>{
-    
+const prepareData = (data) =>{
+    dataJson = JSON.parse(data);
+    const summaryRegex = /\<[^\>]*\>/g;
+    res = []
+    for(var index in dataJson){
+        const { name, status, rating, officialSite, summary} = dataJson[index].show;
+        res.push([name, status, rating.average, officialSite, summary.replace(summaryRegex, '')])
+    }
+    return res;
 }
+
+exports.getDataFromTVMaze = getDataFromTVMaze;

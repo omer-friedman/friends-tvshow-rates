@@ -1,6 +1,9 @@
 const { google } = require('googleapis');
 const Promise = require('promise');
 const credentials = require('./credentials.json');
+const spreadSheetTitle = "Friends rating";
+const sheetTitle = "friends";
+const spreadSheetCols = ["Name", "Status", "Rating", "Official Site", "Summary"];
 
 const googleClient = new google.auth.JWT(
     credentials.client_email,
@@ -10,7 +13,7 @@ const googleClient = new google.auth.JWT(
 );
 
 /**
- * Authenicate google api client
+ * Authenticate google api client
  * @return {Promise<object>} - The authenticated google client
  */
 const authClient = async() =>{
@@ -27,16 +30,15 @@ const authClient = async() =>{
 
 /**
  * Creates a new Google Spreadsheet.
- * @param {string} title - The spreadsheet title
- * @param {Array} fields - The spreadsheet fields
+ * @param {object} client - The Authorized google client
  * @return {Promise<string>} - The spreadsheet ID  
  */
-const createNewGS = async(client, title) =>{
+const createNewGS = async(client) =>{
     return new Promise((resolve, reject) =>{
         const sheets = google.sheets({version: 'v4', auth: client});
         const resource = {
             properties: {
-                title,
+                title: spreadSheetTitle,
             },
         };
         sheets.spreadsheets.create({
@@ -47,12 +49,79 @@ const createNewGS = async(client, title) =>{
                 reject(err);
             }
             else{
-                console.log(`Spreadsheet ID: ${spreadsheet.data.spreadsheetId}`);
                 resolve(spreadsheet.data.spreadsheetId);
             }
         });
-    })
+    });
+}
+
+/**
+ * Creates a new sheet in a specific spreadsheet
+ * @param {object} client - The Authorized google client
+ * @param {string} spreadsheetId - The spreadsheet ID
+ * @return {Promise<string>} - The sheetId of the new sheet created
+ */
+const createSheet = async(client, spreadsheetId) =>{
+    return new Promise((resolve, reject) =>{
+        const sheets = google.sheets({version: 'v4', auth: client});
+        let requests=[{
+            addSheet:{
+                properties:{
+                    title: sheetTitle,
+                }
+            }
+        }];
+        sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {requests}
+        }, (err, response) =>{
+            if(err){
+                console.log(err);
+                reject(err);
+            }
+            else{
+                resolve(response.data.replies[0].addSheet.properties.sheetId);
+            }
+        });
+    });
+}
+
+/**
+ * 
+ * @param {object} client - The Authorized google client
+ * @param {string} spreadsheetId - The spreadsheet ID
+ * @param {string[][]} data - The Data to add to google sheets
+ * 
+ */
+const insertData = async(client, spreadsheetId, data) =>{
+    return new Promise((resolve, reject) =>{
+        const sheets = google.sheets({version: 'v4', auth: client});
+        const values = [spreadSheetCols,]
+        data.forEach(element => {
+            values.push(element);
+        });
+        const resource = {
+            values,
+        };
+        const range = sheetTitle;
+        sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range,
+            valueInputOption: "RAW",
+            insertDataOption: 'INSERT_ROWS',
+            resource,
+        }, (err, response) =>{
+            if(err){
+                reject(err);
+            }
+            else{
+                resolve(response);
+            }
+        });
+    });
 }
 
 exports.authClient = authClient;
 exports.createNewGS = createNewGS;
+exports.createSheet = createSheet;
+exports.insertData = insertData;
