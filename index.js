@@ -1,29 +1,16 @@
-var http = require('http');
+const http = require('http');
+const googleServices = require('./google-api-helper');
+const tvmazeServices = require('./tvmaze-api-helper');
+const spreadSheetTitle = "Friends rating";
+const spreadSheetCols = ["Name", "Status", "Rating", "Official Site", "Summary"];
 
-
-//The url we want: http://api.tvmaze.com/singlesearch/shows?q=friends
-const options = {
-    host: 'api.tvmaze.com',
-    path: '/singlesearch/shows?q=friends',
-    method: 'GET',
-}
-
-/**
- * getDataFromAPI:
- * Make a GET request to fetch tv shows from api.tvmaze
- * @param response - callback resoponse from http
- */
-const getDataFromAPI = (response) =>{
-    let data = '';
-    response.on('data', function(chunk){
-        data += chunk;
-    }).on('error', function(err){
-        console.log(err);
-    }).on('end', function(){
-        createGoogleSheet(data);
+(async function(){
+    const gsClient = await googleServices.authClient().then(res => {
+        return res
     });
-}
+    const spreadsheetId = await googleServices.createNewGS(gsClient, spreadSheetTitle).then(res => {
+        return res
+    });
+    console.log(spreadsheetId);
+})();
 
-
-//Make http request
-http.request(options, getDataFromAPI).end();
