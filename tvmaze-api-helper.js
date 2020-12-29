@@ -1,6 +1,6 @@
 const http = require('http');
 const Promise = require('promise');
-
+const test = require("ava");
 
 /**
  * getDataFromTVMaze:
@@ -30,13 +30,27 @@ const getDataFromTVMaze = async(options) =>{
  */
 const prepareData = (data) =>{
     dataJson = JSON.parse(data);
-    const summaryRegex = /\<[^\>]*\>/g;
+    const summaryRegex = /\<[^\>]*\>/g; //to remove all < .... > from the summary
     res = []
     for(var index in dataJson){
         const { name, status, rating, officialSite, summary} = dataJson[index].show;
         res.push([name, status, rating.average, officialSite, summary.replace(summaryRegex, '')])
     }
-    return res;
+    return res.sort(tvShowComparator);
+}
+
+/**
+ * Comperator between two tvshows by their rating
+ * @param {Array} show1 - List of properties of a tvshow
+ * @param {Array} show2 - List of properties of a tvshow
+ */
+const tvShowComparator = (show1, show2)=>{
+    show1 = show1[2] || 0; //default value 0 in case rating is null
+    show2 = show2[2] || 0; //default value 0 in case rating is null
+    if(show1 === show2)
+        return 0;
+    return show1 > show2? -1 : 1;
 }
 
 exports.getDataFromTVMaze = getDataFromTVMaze;
+exports.tvShowComparator = tvShowComparator;

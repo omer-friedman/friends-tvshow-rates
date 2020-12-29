@@ -4,11 +4,12 @@
   "description": "Awesome %Friends% TVShow rates using Google Sheets",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava \"**/*.js\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ava": "^3.14.0",
     "googleapis": "^66.0.0",
     "http": "0.0.1-security",
     "promise": "^8.1.0"
