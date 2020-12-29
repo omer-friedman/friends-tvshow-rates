@@ -2,7 +2,7 @@ const googleServices = require('./google-api-helper');
 const tvmazeServices = require('./tvmaze-api-helper');
 const readline = require("readline");
 const { exit } = require('process');
-const sharedEmails = [];
+const sharedEmails = ['omerf31@gmail.com'];
 
 //The url we want: http://api.tvmaze.com/search/shows?q=friends
 const options = {

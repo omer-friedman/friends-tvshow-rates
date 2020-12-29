@@ -1,6 +1,5 @@
 const http = require('http');
 const Promise = require('promise');
-const test = require("ava");
 
 /**
  * getDataFromTVMaze:
